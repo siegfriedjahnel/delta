@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Anothe covid dashboard</title>
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="style.css" rel="stylesheet">
+</head>
+<body>
+<table id="tblOutput">
+  <thead>
+    <tr><td>Land</td><td>Fälle (Woche) (gestern)</td><td>Tote (Woche) (gestern)</td></tr>
+  </thead>
+</table>
+</body>
+<script>
+  const tblOutput = document.getElementById("tblOutput");
+  const countries = ['jp','gb','nl','de','fr','eg'];
+  async function getDataFromJHI(id){
+    let uri = `https://jhucoronavirus.azureedge.net/api/v1/regions/${id}.json`;
+    const response = await fetch(uri);
+    const json = await response.json();
+    const countryName = json.country;
+    const deathLastDay = json.deaths.day;
+    const deathLastWeek = json.deaths.week;
+    const casesLastWeek = json.confirmed_cases.week;
+    const casesLastDay = json.confirmed_cases.day;
+    
+    let tr = document.createElement("tr");
+    tr.innerHTML = `<tr><td>${countryName}</td><td>${casesLastWeek}<br>${casesLastDay}</td><td>${deathLastWeek}<br>${deathLastDay}</td></tr>`;
+    tblOutput.appendChild(tr);
+  }
+
+
+  function init(){
+    countries.forEach((key)=>{
+      getDataFromJHI(key)
+      // .then((r) =>{
+      //   console.log(r);
+      //   //let tr = document.createElement("tr");
+      //   //tr.innerHTML= "<tr><td>1</td><td>1</td><td>3</td></tr>";
+      //   //tblOutput.appendChild(tr);
+      // })
+    })
+    //get data
+    //draw data
+  }
+  init();
+</script>
+</html>
