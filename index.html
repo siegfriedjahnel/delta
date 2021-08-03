@@ -8,44 +8,88 @@
 <link href="style.css" rel="stylesheet">
 </head>
 <body>
+  <p>
+    <input type="text" list="dataListCountries" id="tfCountry" name="country" >
+    <datalist id="dataListCountries"></datalist>
+    <button onclick="addLocation()">send</button>
+  </p>
 <table id="tblOutput">
   <thead>
-    <tr><td>Land</td><td>Fälle (Woche) (gestern)</td><td>Tote (Woche) (gestern)</td></tr>
+    <tr><th>Land</th><th>Fälle (Woche) (gestern)</th><th>Tote (Woche) (gestern)</th></tr>
   </thead>
 </table>
 </body>
+<script src="dataListCountries.js"></script>
 <script>
+  document.getElementById("dataListCountries").innerHTML=dataListCountries;
+  //https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/rki_key_data_v/FeatureServer/0/query?f=json&where=AdmUnitId=${id}&outFields=*
   const tblOutput = document.getElementById("tblOutput");
-  const countries = ['jp','gb','nl','de','fr','eg'];
-  async function getDataFromJHI(id){
-    let uri = `https://jhucoronavirus.azureedge.net/api/v1/regions/${id}.json`;
+  const countries = ['jp','gb','nl','de','fr','eg','in'];
+  const myCountries = [
+    {"id":"de", "name":"Deutschland"},
+    {"id":"jp", "name":"Japan"},
+    {"id":"in", "name":"Indien"},
+    {"id":"nl", "name":"Niederlande"},
+    {"id":"gb", "name":"Großbritanien"},
+    {"id":"fr", "name":"Frankreich"},
+    {"id":"eg", "name":"Ägypten"}
+  ];
+
+  const myLocations = [
+    {"id":"0", "name":"Deutschland"},
+    {"id":"9", "name":"Bayern"},
+    {"id":"9171", "name":"LK Altötting"}
+  ]
+  let promises =[];
+
+
+  myCountries.forEach((element=>{
+    promises.push(getDataFromJHI(element));//put all promises in an array
+  }))
+
+  async function getDataFromJHI(element){
+    let uri = `https://jhucoronavirus.azureedge.net/api/v1/regions/${element.id}.json`;
     const response = await fetch(uri);
     const json = await response.json();
-    const countryName = json.country;
+    json["name"] = element.name;
+    return json;
+  }
+
+  async function getDataFromRKI(element){
+    let uri = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/rki_key_data_v/FeatureServer/0/query?f=json&where=AdmUnitId=${id}&outFields=*`;
+    const response = await fetch(uri);
+    const json = await response.json();
+    json["name"] = element.name;
+    return json;
+  }
+
+  Promise.all(promises)//resolve all promises
+  .then((values)=>{
+    values.forEach((json)=>{
+    const datum = new Date(json.timestamp).toLocaleDateString(["de-de" ]);
+    const countryName = json.name;
     const deathLastDay = json.deaths.day;
     const deathLastWeek = json.deaths.week;
     const casesLastWeek = json.confirmed_cases.week;
     const casesLastDay = json.confirmed_cases.day;
-    
-    let tr = document.createElement("tr");
-    tr.innerHTML = `<tr><td>${countryName}</td><td>${casesLastWeek}<br>${casesLastDay}</td><td>${deathLastWeek}<br>${deathLastDay}</td></tr>`;
+    let tr =document.createElement("tr");
+    tr.innerHTML = `<tr><td>${countryName}<br>${datum}</td><td>${casesLastWeek}<br>${casesLastDay}</td><td>${deathLastWeek}<br>${deathLastDay}</td></tr>`;
     tblOutput.appendChild(tr);
+
+    })
+  })
+
+  function addLocation(){
+    const country =document.getElementById("tfCountry").value;
+    console.log("adding ", country );
   }
 
-
   function init(){
-    countries.forEach((key)=>{
-      getDataFromJHI(key)
-      // .then((r) =>{
-      //   console.log(r);
-      //   //let tr = document.createElement("tr");
-      //   //tr.innerHTML= "<tr><td>1</td><td>1</td><td>3</td></tr>";
-      //   //tblOutput.appendChild(tr);
-      // })
-    })
+    //read localStorage
+    //iterate through array of locations/countries
     //get data
     //draw data
   }
-  init();
+  //init();
 </script>
 </html>
