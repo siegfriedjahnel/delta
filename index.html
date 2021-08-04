@@ -1,61 +1,59 @@
 <!doctype html>
 <html lang="de">
+
 <head>
-<meta charset="utf-8">
-<title>Anothe covid dashboard</title>
-<meta name="description" content="">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="style.css" rel="stylesheet">
+  <meta charset="utf-8">
+  <title>Anothe covid dashboard</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="style.css" rel="stylesheet">
 </head>
+
 <body>
   <p>
-    <input type="text" list="dataListCountries" id="tfCountry" name="country" >
+    <input type="text" list="dataListCountries" id="tfCountry" name="country">
     <datalist id="dataListCountries"></datalist>
-    <button onclick="addLocation()">send</button>
+    <button onclick="addLocation()">send!</button>
   </p>
-<table id="tblOutput">
-  <thead>
-    <tr><th>Land</th><th>Fälle (Woche) (gestern)</th><th>Tote (Woche) (gestern)</th></tr>
-  </thead>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>Land</th>
+        <th>Fälle (Woche) (gestern)</th>
+        <th>Tote (Woche) (gestern)</th>
+        <th> - </th>
+      </tr>
+    </thead>
+    <tbody id="tblOutput">
+    </tbody>
+  </table>
+  <p id="status"></p>
 </body>
 <script src="dataListCountries.js"></script>
 <script>
-  document.getElementById("dataListCountries").innerHTML=dataListCountries;
+  document.getElementById("dataListCountries").innerHTML = dataListCountries;
   //https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/rki_key_data_v/FeatureServer/0/query?f=json&where=AdmUnitId=${id}&outFields=*
   const tblOutput = document.getElementById("tblOutput");
-  const countries = ['jp','gb','nl','de','fr','eg','in'];
-  const myCountries = [
-    {"id":"de", "name":"Deutschland"},
-    {"id":"jp", "name":"Japan"},
-    {"id":"in", "name":"Indien"},
-    {"id":"nl", "name":"Niederlande"},
-    {"id":"gb", "name":"Großbritanien"},
-    {"id":"fr", "name":"Frankreich"},
-    {"id":"eg", "name":"Ägypten"}
-  ];
-
-  const myLocations = [
-    {"id":"0", "name":"Deutschland"},
-    {"id":"9", "name":"Bayern"},
-    {"id":"9171", "name":"LK Altötting"}
-  ]
-  let promises =[];
+  const status = document.getElementById("status");
+  let myCountries = [];
+  const myLocations = []
+  let promises = [];
 
 
-  myCountries.forEach((element=>{
-    promises.push(getDataFromJHI(element));//put all promises in an array
-  }))
 
-  async function getDataFromJHI(element){
-    let uri = `https://jhucoronavirus.azureedge.net/api/v1/regions/${element.id}.json`;
+
+
+  async function getDataFromJHI(element) {
+    let id = element.split("--")[1]
+    let name = element.split("--")[0]
+    let uri = `https://jhucoronavirus.azureedge.net/api/v1/regions/${id}.json`;
     const response = await fetch(uri);
     const json = await response.json();
-    json["name"] = element.name;
+    json["name"] = name;
     return json;
   }
 
-  async function getDataFromRKI(element){
+  async function getDataFromRKI(element) {
     let uri = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/rki_key_data_v/FeatureServer/0/query?f=json&where=AdmUnitId=${id}&outFields=*`;
     const response = await fetch(uri);
     const json = await response.json();
@@ -63,33 +61,57 @@
     return json;
   }
 
-  Promise.all(promises)//resolve all promises
-  .then((values)=>{
-    values.forEach((json)=>{
-    const datum = new Date(json.timestamp).toLocaleDateString(["de-de" ]);
-    const countryName = json.name;
-    const deathLastDay = json.deaths.day;
-    const deathLastWeek = json.deaths.week;
-    const casesLastWeek = json.confirmed_cases.week;
-    const casesLastDay = json.confirmed_cases.day;
-    let tr =document.createElement("tr");
-    tr.innerHTML = `<tr><td>${countryName}<br>${datum}</td><td>${casesLastWeek}<br>${casesLastDay}</td><td>${deathLastWeek}<br>${deathLastDay}</td></tr>`;
-    tblOutput.appendChild(tr);
 
-    })
-  })
 
-  function addLocation(){
-    const country =document.getElementById("tfCountry").value;
-    console.log("adding ", country );
+  function removeLocation(index) {
+    myCountries.splice(index, 1);
+    localStorage.setItem("myCountries", JSON.stringify(myCountries));
+    console.log("remove", myCountries);
+    init();
   }
 
-  function init(){
+  function addLocation() {
+    const tfCountry = document.getElementById("tfCountry");
+    const country = tfCountry.value;
+    myCountries.push(country);
+    localStorage.setItem("myCountries", JSON.stringify(myCountries));
+    tfCountry.value = "";
+    init();
+  }
+
+  function init() {
+    tblOutput.innerHTML = "";
+    status.innerHTML = "loading";
     //read localStorage
-    //iterate through array of locations/countries
-    //get data
-    //draw data
+    if (localStorage.getItem("myCountries")) {
+      myCountries = JSON.parse(localStorage.getItem("myCountries"));
+    }
+    promises = [];
+    myCountries.forEach((element => {
+      promises.push(getDataFromJHI(element));//put all promises in an array
+    }))
+    Promise.all(promises)//resolve all promises
+      .then((values) => {
+        status.innerHTML = "";
+        values.forEach((json, index) => {
+          const datum = new Date(json.timestamp).toLocaleDateString(["de-de"]);
+          const countryName = json.name;
+          const deathLastDay = json.deaths.day;
+          const deathLastWeek = json.deaths.week;
+          const casesLastWeek = json.confirmed_cases.week;
+          const casesLastDay = json.confirmed_cases.day;
+          let tr = document.createElement("tr");
+          tr.innerHTML = `<tr><td>${countryName}<br>${datum}</td>
+                        <td>${casesLastWeek}<br>${casesLastDay}</td>
+                        <td>${deathLastWeek}<br>${deathLastDay}</td>
+                        <td><button onclick="removeLocation(${index})"> - </td></tr>`;
+          tblOutput.appendChild(tr);
+
+        })
+      })
+
   }
-  //init();
+  init();
 </script>
+
 </html>

@@ -11,7 +11,6 @@ const dataListCountries=`<option value = '​ Afghanistan--af' ></option>
 <option value = '​ Äquatorial Guinea--gq' ></option>
 <option value = '​ Argentinien--ar' ></option>
 <option value = '​ Armenien--am' ></option>
-<option value = '​ Aruba--aw' ></option>
 <option value = '​ Aserbaidschan--az' ></option>
 <option value = '​ Äthiopien--et' ></option>
 <option value = '​ Australien--au' ></option>
@@ -235,12 +234,12 @@ const dataListCountries=`<option value = '​ Afghanistan--af' ></option>
 <option value = ' Ukraine--ua' ></option>
 <option value = ' Ungarn--hu' ></option>
 <option value = ' Uruguay--uy' ></option>
+<option value = ' USA--us' ></option>
 <option value = ' Usbekistan--uz' ></option>
 <option value = ' Vanuatu--vu' ></option>
 <option value = ' Vatikan--va' ></option>
 <option value = ' Venezuela--ve' ></option>
 <option value = ' Vereinigte Arabische Emirate--ae' ></option>
-<option value = ' Vereinigte Staaten von Amerika--us' ></option>
 <option value = ' Vietnam--vn' ></option>
 <option value = ' Virgin Island (Brit.)--vg' ></option>
 <option value = ' Virgin Island (USA)--vi' ></option>
